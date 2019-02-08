@@ -2,7 +2,6 @@ language: go
 
 go:
   - 1.11.x
-
 script:
   - make fmt
   - make test
@@ -19,7 +18,7 @@ deploy:
   provider: releases
   skip_cleanup: true
   api_key:
-    secure: "ramg5AYWrhtyWXueDHibPycaw25C93xTM9VfA1kx7QQw7AniaLj0Sq2Cflq/qt4GOU9v6to02Y6B03BEQIv3duzVifcRoQyYXOuc9Sirst1tsKdrOW8Zlnvq1ttvcckqVnu3LwoDG7F9coKUmIBcvd/+UU0t77MJBw7i/P7mbTmxNtq9xoXLzQhr79D2vOB9nWnCvN6pHWXWvP8IFxvY5Q+KAo1tYclWLCxtRbw7NdhqAKLbrpi1hIb+E3dI0vuJUkZ/YIdzR/FFOAi+PFwkvfpKwZwA4GWZs6cpJx37PR3SK2YqIWRddvin8EbIQZmmEMeeh/oYUWhxarLvoRMe833DNkxc9fj5S+9Zf0EZTrQzTVNEfoATkTllJII0fN26HPJ2lWP/Re5BdlKDP+otUfiy0ePVfPCj1pbCu8E8DX95HQHsr31wqnPuSZJ36RdoPssK+wQecYw9AubIIpBIXqCGoZXl/UhYT3jXjz5FbugryLIaVq+e7n0nCgE7o4+CZrmPzNKX79tjgPnSBVnJD+SVO9vhNDpYAmDzPdlsqS5YFHA3X+zC+wKtwBR2JCNeofjhzM+QCyrdC19SQwhwxXPIcuGtYsSVX3ebJjSZIErPwyX/xaHZe8df2Cb6c3hsQm6OU7rikmJriguX5k0UPOlH64fVVRHK948rz8FkzGA="
+    secure: c9cMWroUxbArhdYvPWUO2OxuU/VkkqZzZxwmomYqREk7wHuges0HVBDJYRzDR8YlbT7iDlMtI+lcoHcntqlsRV2KSd7kbwxE8UGSIfesThLHBoVWbFGQmDXXhYTPNxkhQq0Q8Ceo/yL9Z+QUrNbxoTfSGYkvIObQxWMLSgQ82ld92VXMjcytiFQkoz0FKzyad1qfdm3L3GLLqdyjY1GCV9lF5/U+rFF/Yh4+9ocGyxzhOvjshO0bzvWsBkQpnsKxqYRIeuizAJ5+EKyI7k2XovLD6mOHMqEeu1klodyb48oott+WWvZqwreo1VnTFu1bY6X0Y01PhHXHzo5dsyaMHq1/CRh4BQuTfv5ILYXFTqW8B0P+0a/O99GLZY0z+6r+152Ee4K90pl7NDplz2O1A7EdB8Ja8zcqXi50mzvQLNPr3q1ZZfMryxjvJHBpW2n6QJbsKOtB3s/Gcguc+oX2dLe0djse0ulEVZxhwgYhN5+2XCLkRtf3/dnoKXm/yyd7I2lwoCBLVeKk8Y9sbMdBZLtvIOKA3T32E5LhujKxhnUiauN3PzqMRI9rDzxx9twr7tWzqzKBK89vVHAVUH06XCPO57R6oNYAtHGuG7SCJvnEcdwwaRZh2DUi4QMYRj91CgqLUmYU7BOvhxaLulZvtC+0QlfdlwFEeB/hgoybAiw=
   file:
     - bin/retry-linux
     - bin/retry-mac
