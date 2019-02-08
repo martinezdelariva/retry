@@ -1,0 +1,31 @@
+language: go
+
+go:
+  - 1.11.x
+
+script:
+  - make fmt
+  - make test
+
+notifications:
+  email:
+    on_success: never
+    on_failure: always
+
+before_deploy:
+  - GOOS=linux go build -o bin/timehook-linux cmd/main/timehook.go
+  - GOOS=darwin go build -o bin/timehook-mac cmd/main/timehook.go
+  - GOOS=windows go build -o bin/timehook.exe cmd/main/timehook.go
+
+deploy:
+  provider: releases
+  skip_cleanup: true
+  api_key:
+    secure: "ramg5AYWrhtyWXueDHibPycaw25C93xTM9VfA1kx7QQw7AniaLj0Sq2Cflq/qt4GOU9v6to02Y6B03BEQIv3duzVifcRoQyYXOuc9Sirst1tsKdrOW8Zlnvq1ttvcckqVnu3LwoDG7F9coKUmIBcvd/+UU0t77MJBw7i/P7mbTmxNtq9xoXLzQhr79D2vOB9nWnCvN6pHWXWvP8IFxvY5Q+KAo1tYclWLCxtRbw7NdhqAKLbrpi1hIb+E3dI0vuJUkZ/YIdzR/FFOAi+PFwkvfpKwZwA4GWZs6cpJx37PR3SK2YqIWRddvin8EbIQZmmEMeeh/oYUWhxarLvoRMe833DNkxc9fj5S+9Zf0EZTrQzTVNEfoATkTllJII0fN26HPJ2lWP/Re5BdlKDP+otUfiy0ePVfPCj1pbCu8E8DX95HQHsr31wqnPuSZJ36RdoPssK+wQecYw9AubIIpBIXqCGoZXl/UhYT3jXjz5FbugryLIaVq+e7n0nCgE7o4+CZrmPzNKX79tjgPnSBVnJD+SVO9vhNDpYAmDzPdlsqS5YFHA3X+zC+wKtwBR2JCNeofjhzM+QCyrdC19SQwhwxXPIcuGtYsSVX3ebJjSZIErPwyX/xaHZe8df2Cb6c3hsQm6OU7rikmJriguX5k0UPOlH64fVVRHK948rz8FkzGA="
+  file:
+    - bin/retry-linux
+    - bin/retry-mac
+    - bin/retry.exe
+  on:
+    repo: martinezdelariva/retry
+    tags: true
