@@ -1,0 +1,13 @@
+language: go
+
+go:
+  - 1.11.x
+
+script:
+  - make fmt
+  - make test
+
+notifications:
+  email:
+    on_success: never
+    on_failure: always
