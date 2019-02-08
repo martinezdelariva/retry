@@ -13,9 +13,7 @@ notifications:
     on_failure: always
 
 before_deploy:
-  - GOOS=linux go build -o bin/timehook-linux cmd/main/timehook.go
-  - GOOS=darwin go build -o bin/timehook-mac cmd/main/timehook.go
-  - GOOS=windows go build -o bin/timehook.exe cmd/main/timehook.go
+  - make release
 
 deploy:
   provider: releases
