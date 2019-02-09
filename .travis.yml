@@ -18,11 +18,11 @@ deploy:
   provider: releases
   skip_cleanup: true
   api_key:
-    secure: ro1ghTRqLGSHzcWZa7KjyXwdA+1J7+fWZ8pidqflLz7F5bt01S1VTdAOLdhUWS8uGDcq8iGTjWBJYIuO5+ci++U+6GcYdTvf8wuAW9UUnLxN4XBYCbs3UI4o+lRryooGHVCf0K8ykEA7kxSg9rW4kxkRzsnkSpf3GcgnTB6briKyCJVsnbUzTV0wO1qbSf04QlenteH1SEkfFr9/pJKrIP6HqaQKDk2PCZ23DXY+Y7V2AI3QtWIvcPrf548+6EGaHwyicsvMZ435ysNXEr/KWr2R7u2Ftv7xauIMTooMSopxcCcWl6N5AgQJKCrEV/D3mXwxC9yQUNRVbBA94vj9J9Oudwfq9VuMnFsM9XOTJVvcXAwM+U9n+wajutLaWZS4/H6lFFe/FyXg+IGLk9qXi6btX/RcyKbcplQtukiT16/Su+vLd0i+AQPmvZTE4Uux/CLsdiUX6/O526Y+Xm22bJKa+AuBLAJmO5n6BdR35jwj0nqJb071pHFYfWRX/y1yWdGyvRb0txgAfTb+Oifxb04U9P0fsA8bfjDRWdTF9Xf18uYy5mRJ7GPq6vDK/Mp4RYtTBTmmblF+SL5bMVE86hBya27ZIvO6YYHqm5kOYz/J+wrFliJC3NZHh0dsL4oi/1q9kKve9wSbhVRnk9yBjd6dWR9TnB+tSe0iNZvmWA8=
+    secure: RLaO3l4XIAHdw+38XLkQ1LqvJscCJKkAahB3YSY/MUXS7Mr9q+AGjUyPISTG5gRxA7xdRc1qDgVzhVzRWek7xTKJOpY2MP3BU2mCwGZcZrg9a9VdKTyuAhXGzVRR3Rjb+wIkyYzC2Zuf/XRvQmPWhbjTahnCbW0sA4KAlvh1GPzoWoSqCLewrpmz5FV4eau5M3IizOi3AFZ5kvGAoLkgI2d0N2oLyYx9Wv7poiW0WJeWGGRaFM57fCYcocvKFcEJ7iaQB7sqsnl/V27FzmxBQsCOlEi9YkONVA+cgLUm6dLTHXvnMlEWkO5p6Z7TQK2O4+T60rjjgbkRo/PNp2sxS+hMtYp2WvBBkSFZN9E0HiWvlLv7oaLiWxi5BoK8ExBY36PHbbeMEyRluxW13C8kOPn95b1Y0vCXfol0geoo5dOBU+Jy1XP6NzU61FHt/ied0VGH5XxbnxgT1S+a5qvLVfwTWRoSCiHvl75JlOp7LmXfimGfEuxQFyhnTluW70tDa8YEpGADETC2qV44rSXZiMmPjlqT3ETgA8zvoKKv+uBy/rUdBVlqF7tOmBhSy5Hw+SEa5YlXbu2u/n87Q0zLG7NIke2uYN9EHaM9iWC24Yj20q2mrHhQAGcx9ng42klMuJB15uFhzNPpCeMChYjerwu20ssga3UB+MXsT87A8zU=
   file:
-   - bin/retry-mac
-   - bin/retry-linux
-   - bin/retry.exe
+    - bin/retry-mac
+    - bin/retry-linux
+    - bin/retry.exe
   on:
     repo: martinezdelariva/retry
     tags: true
