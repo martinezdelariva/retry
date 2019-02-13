@@ -1,21 +1,28 @@
 language: go
 go:
-- 1.11.x
+  - 1.11.x
+
 script:
-- make fmt
-- make test
+  - make fmt
+  - make test
+
 notifications:
   email:
     on_success: never
     on_failure: always
+
 before_deploy:
-- make release
+  - make release
+
 deploy:
   provider: releases
   skip_cleanup: true
   api_key:
-    secure: M+F/pwayTWBXY8AEr3dMn5rZWHvoslf8Gr2JMwi0TF71/nPmzTga4dI+SICvI9Sjdc5vXvaTAlJF+YnepigsxwGTc/mq7Yvpz7cpkMVUWXiy1e2Xidcy40undlbdK5WPoChud8HZEDxvXqS+dPCr0jzOK9ODIqdu0/PbBG6Uh9YLIPAamFaQHfPHZFhE1QqPGfYOZVbOCD2KmGFumUmwIrIGWhKfwzjNIpxkMdk+X6tysVjDzxzGG5jXsziV9qlSGguLtbPRWDsKgif7BNu1b1u243NjJwWb9N10H3jy2JHlmxjPpJK4LUo48s8CYiQGtrh6nxJIxmf3oxF200BVY8Ggp7BRCztcRB60yQeyvbjW9jl/bxkG/MgE2nZd8C7Y8PomlqSsOfrlicyh2C/sf6JKjrH/0bSUAMFETe4Ogk89eNOMSbVEb+zRSTpTEhRKGsd7lIc9cdtvd60r/GwLaiOwAbG3yMYQM5/ZQqm8clsx/6NzeW8VsUIkKHczMsXoGsqCUY9hRzdC7qJyXXu3U3HyA6rXElrYomdrW+nOrnAabndvGTG7aYRZLwt6OGvL+Gtg7c0uVx1+8IOIet08Iw1nkJ1HzhlToG86YQe8tyuVFsdshZBZXZrLYWmnMKzJBZbfqRvdsz8QqSVOOerODN4dgGxadP57e0EKltlr8/c=
-  file: bin/retry-mac
+    secure: C4YAeSLcq3wVX7tE37NHRRzYHZitwD/3DIRX1L6oLFwe00c/1xKa9iiTD3Gdzv13NjF2f+B6yC2W8XVO/QcPdkJ7LEftlA8JZDJnrUBgSPNNOit2M9hMIoKV1XcKXFV3TNlHVYQGQ1wGTeQXH0VeLaNRfRhlyf8kA4qpHys/KxC2bjyd+zzGyf2w6DrFzx+ydruWdy3kGy/hXWlWMWqSsrhrRoEVTokVOM9nug6oB/geoVx0JcWemhOnoZjalxMpKSKRw595QHOZCuBpsfOeUOGAQxeI4fBE7kakEIXEnrBQEKRAukhm2T2K+7neS44cySnYrmAgpLwY88G5F31h2MsVWu/E5sIXu83j+NWKGlGtWRE0PVKo7wBTmICTqtkKhSn8mJk3F96rMs4GU7KZ17nIbZdnCHddz2VPrlLeNFB464lwnqfSh0Je9Kq5uAQPtVbRX/aas0AqGlRWHbHEBcBfjpGL6hMpSO5tRvTyXtz4n6yiS712ah7tYik/uKesJJkIEDwkb2ys53pWsTA2oyXqtV6cCXcLCYE05gCfTT8spV9BkTSM2X9nUAu/i+/D8qOzdvlxNGca55FKeuBRkex2soycjj1Fetu1R6VqWO/D016oV7PZ+uMX5xtABvyEIZAqGwZlERXkI4PgLNsB7iUpO0prH7aoITXQU1SxRVo=
+  file:
+    - bin/retry-mac
+    - bin/retry-linux
+    - bin/retry.exe
   on:
     repo: martinezdelariva/retry
     tags: true
