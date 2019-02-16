@@ -12,7 +12,7 @@ test:
 
 build: test
 	mkdir -p bin
-	go build -ldflags "-X main.version=`git describe --tags --dirty --always`" -o bin/retry cmd/retry/*
+	go build -ldflags "-X main.version=`cat VERSION`" -o bin/retry cmd/retry/*
 
 release: test
 	mkdir -p bin
