@@ -19,6 +19,13 @@ $ retry --max 4 curl --head --url https://www.google.com
 
 Download at [releases](https://github.com/martinezdelariva/retry/releases)
 
+##### Homebrew (macOS)
+
+To add the tap and install in one command:
+
+`brew install martinezdelariva/retry/retry`
+
+
 ##### Compile on your own
 
 1. Download or clone the repo.
