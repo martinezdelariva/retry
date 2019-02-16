@@ -1,3 +1,5 @@
+BUILD_LDFLAG := -ldflags "-X main.version=`git describe --tags --dirty --always`"
+
 .PHONY: fmt test build clean
 
 fmt:
@@ -12,13 +14,13 @@ test:
 
 build: test
 	mkdir -p bin
-	go build -ldflags "-X main.version=`cat VERSION`" -o bin/retry cmd/retry/*
+	go build $(BUILD_LDFLAG) -o bin/retry cmd/retry/*
 
 release: test
 	mkdir -p bin
-	GOOS=linux go build -o bin/retry-linux cmd/retry/*
-	GOOS=darwin go build -o bin/retry-mac cmd/retry/*
-	GOOS=windows go build -o bin/retry.exe cmd/retry/*
+	GOOS=linux go build $(BUILD_LDFLAG) -o bin/retry-linux cmd/retry/*
+	GOOS=darwin go build $(BUILD_LDFLAG) -o bin/retry-mac cmd/retry/*
+	GOOS=windows go build $(BUILD_LDFLAG) -o bin/retry.exe cmd/retry/*
 
 clean:
 	rm -R bin
