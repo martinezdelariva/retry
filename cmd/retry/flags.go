@@ -5,12 +5,15 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"time"
 )
 
 type cmdFlags struct {
 	name    string
 	args    []string
 	max     int
+	timeout time.Duration
+	sleep   time.Duration
 	version bool
 }
 
@@ -21,6 +24,8 @@ func flags() (cmdFlags, error) {
 	}
 
 	max := flag.Int("max", 1, "maximum number of retries")
+	timeout := flag.Duration("timeout", 24*time.Hour, "limits the time duration of total retries in 0h0m0s")
+	sleep := flag.Duration("sleep", 0, "sleep time between single execution in 0h0m0s")
 	ver := flag.Bool("version", false, "show app version")
 
 	flag.Parse()
@@ -34,9 +39,11 @@ func flags() (cmdFlags, error) {
 	}
 
 	f := cmdFlags{
-		name: flag.Args()[0],
-		args: flag.Args()[1:],
-		max:  *max,
+		name:    flag.Args()[0],
+		args:    flag.Args()[1:],
+		max:     *max,
+		timeout: *timeout,
+		sleep:   *sleep,
 	}
 
 	return f, nil

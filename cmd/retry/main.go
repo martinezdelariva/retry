@@ -27,7 +27,7 @@ func main() {
 	}
 
 	// signals
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithTimeout(context.Background(), f.timeout)
 	go func() {
 		sig := make(chan os.Signal, 1)
 		signal.Notify(sig, os.Interrupt, os.Kill)
@@ -37,7 +37,7 @@ func main() {
 	}()
 
 	// retry
-	rty := retry.Command(ctx, f.name, f.args, retry.Config{Max: f.max})
+	rty := retry.Command(ctx, f.name, f.args, retry.Config{Max: f.max, Sleep: f.sleep})
 	tbl, _ := view.NewTable(os.Stdout)
 	for r := range rty.Run() {
 		err := tbl.PrintRow(r)

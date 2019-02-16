@@ -7,6 +7,9 @@ import (
 	"time"
 )
 
+// retrySleep proxy to function time.After and is overridden in testing to not depend on time
+var retrySleep = time.After
+
 // Command returns a retry which encapsulates name and arguments of the command to be executed with
 // the configuration policies for retries and context for cancellation.
 func Command(ctx context.Context, name string, arg []string, config Config) *retry {
@@ -19,7 +22,8 @@ func Command(ctx context.Context, name string, arg []string, config Config) *ret
 }
 
 type Config struct {
-	Max int
+	Max   int
+	Sleep time.Duration
 }
 
 type retry struct {
@@ -38,6 +42,16 @@ func (r *retry) Run() <-chan Result {
 	go func() {
 		defer close(out)
 		for i := 0; i < r.config.Max; i++ {
+			// sleep or done
+			if i != 0 {
+				select {
+				case <-retrySleep(r.config.Sleep):
+				case <-r.cxt.Done():
+					out <- Result{Command: nil, RealTime: 0, Err: r.cxt.Err()}
+					return
+				}
+			}
+
 			now := time.Now()
 			stdout := &bytes.Buffer{}
 			stderr := &bytes.Buffer{}

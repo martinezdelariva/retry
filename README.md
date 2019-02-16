@@ -19,6 +19,13 @@ $ retry --max 4 curl --head --url https://www.google.com
 
 Download at [releases](https://github.com/martinezdelariva/retry/releases)
 
+##### Homebrew (macOS)
+
+To add the tap and install in one command:
+
+`brew install martinezdelariva/retry/retry`
+
+
 ##### Compile on your own
 
 1. Download or clone the repo.
@@ -34,12 +41,14 @@ $ retry [options] <command> [args...]
 
 Options:
 
-- `--max`: maximum number of command execution.
+- `--max 1`: maximum number of command execution.
+- `--sleep 2s`: sleep time between single execution.
+- `--timeout 15s`: limits the time duration of total retries.
 
+
+Type `retry --help` for a complete description and default values.
 
 ## TODO
 
-- Delay time between execution.
 - Exponential back off between execution.
-- Stop execution on timeout.
 - Stop execution of first success.
