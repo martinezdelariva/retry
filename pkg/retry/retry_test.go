@@ -1,4 +1,4 @@
-package retry_test
+package retry
 
 import (
 	"context"
@@ -6,8 +6,6 @@ import (
 	"fmt"
 	"testing"
 	"time"
-
-	"github.com/martinezdelariva/retry/pkg/retry"
 )
 
 type want struct {
@@ -22,14 +20,14 @@ func TestCommand(t *testing.T) {
 		name    string
 		cmdName string
 		args    []string
-		cfg     retry.Config
+		cfg     Config
 		want    []want
 	}{
 		{
 			name:    "one exec",
 			cmdName: "echo",
 			args:    []string{"foo"},
-			cfg:     retry.Config{Max: 1},
+			cfg:     Config{Max: 1},
 			want: []want{
 				{stdout: "foo\n"},
 			},
@@ -38,7 +36,7 @@ func TestCommand(t *testing.T) {
 			name:    "3 exec",
 			cmdName: "echo",
 			args:    []string{"foo"},
-			cfg:     retry.Config{Max: 3},
+			cfg:     Config{Max: 3},
 			want: []want{
 				{stdout: "foo\n"},
 				{stdout: "foo\n"},
@@ -49,7 +47,7 @@ func TestCommand(t *testing.T) {
 			name:    "write on stderr",
 			cmdName: "/bin/sh",
 			args:    []string{"-c", `>&2 echo "an error"`},
-			cfg:     retry.Config{Max: 2},
+			cfg:     Config{Max: 2},
 			want: []want{
 				{stderr: "an error\n"},
 				{stderr: "an error\n"},
@@ -67,7 +65,7 @@ func TestCommand(t *testing.T) {
 			name:    "exit 1 continue exec",
 			cmdName: "/bin/sh",
 			args:    []string{"-c", `exit 1`},
-			cfg:     retry.Config{Max: 2},
+			cfg:     Config{Max: 2},
 			want: []want{
 				{err: errors.New("exit status 1")},
 				{err: errors.New("exit status 1")},
@@ -77,9 +75,9 @@ func TestCommand(t *testing.T) {
 
 	for _, tc := range tt {
 		t.Run(tc.name, func(t *testing.T) {
-			rty := retry.Command(context.Background(), tc.cmdName, tc.args, tc.cfg)
+			rty := Command(context.Background(), tc.cmdName, tc.args, tc.cfg)
 
-			got := make([]retry.Result, 0, len(tc.want))
+			got := make([]Result, 0, len(tc.want))
 			for rst := range rty.Run() {
 				got = append(got, rst)
 			}
@@ -134,13 +132,36 @@ func TestSleep(t *testing.T) {
 }
 
 func TestCancelContext(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Microsecond)
-	defer cancel()
+	// override retrySleep to cancel execution before next retry
+	retrySleep = func(d time.Duration) <-chan time.Time {
+		return make(chan time.Time)
+	}
+	defer func() {
+		retrySleep = time.After
+	}()
 
-	rty := retry.Command(ctx, "sleep", []string{"2s"}, retry.Config{Max: 1})
+	ctx, cancel := context.WithCancel(context.Background())
 
-	r := <-rty.Run()
+	rty := Command(ctx, "echo", []string{}, Config{Max: 4})
+	rCh := rty.Run()
+
+	// 1st result
+	r := <-rCh
+	if r.Err != nil {
+		t.Error("not expected error")
+	}
+
+	cancel()
+
+	// 2nd result
+	r = <-rCh
 	if r.Err == nil {
-		t.Error("context was cancelled but executed")
+		t.Error("cancelled context: want err got nil")
+	}
+
+	// finish retries
+	_, ok := <-rCh
+	if ok {
+		t.Error("no more result expected from channel")
 	}
 }

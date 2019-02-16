@@ -35,6 +35,7 @@ $ retry [options] <command> [args...]
 Options:
 
 - `--max 1`: maximum number of command execution.
+- `--sleep 2s`: sleep time between single execution.
 - `--timeout 15s`: limits the time duration of total retries.
 
 
@@ -42,6 +43,5 @@ Type `retry --help` for a complete description and default values.
 
 ## TODO
 
-- Delay time between execution.
 - Exponential back off between execution.
 - Stop execution of first success.

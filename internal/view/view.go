@@ -53,7 +53,7 @@ func (t *table) printRow(writer io.Writer, row row) error {
 
 func mapRow(result retry.Result) row {
 	row := row{}
-	if result.Command.ProcessState != nil {
+	if result.Command != nil && result.Command.ProcessState != nil {
 		row.Realtime = result.RealTime
 		row.SystemTime = result.Command.ProcessState.SystemTime()
 		row.UserTime = result.Command.ProcessState.UserTime()
