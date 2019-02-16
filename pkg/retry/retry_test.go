@@ -58,7 +58,7 @@ func TestCommand(t *testing.T) {
 		{
 			name:    "command not found halt iterations",
 			cmdName: "unknown",
-			cfg:     retry.Config{Max: 2},
+			cfg:     Config{Max: 2},
 			want: []want{
 				{err: errors.New(`exec: "unknown": executable file not found in $PATH`)},
 			},
@@ -102,6 +102,34 @@ func TestCommand(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestSleep(t *testing.T) {
+	// override retrySleep to not depend on time
+	sleep := make(chan time.Time)
+	retrySleep = func(d time.Duration) <-chan time.Time {
+		if d != 5*time.Second {
+			t.Errorf("sleep want %s got %s", 5*time.Second, d)
+		}
+		return sleep
+	}
+	defer func() {
+		retrySleep = time.After
+	}()
+
+	cfg := Config{Max: 2, Sleep: 5 * time.Second}
+	rty := Command(context.Background(), "echo", []string{}, cfg)
+	rCh := rty.Run()
+
+	// consume 2 results and 1 sleep
+	<-rCh
+	sleep <- time.Time{}
+	<-rCh
+
+	_, ok := <-rCh
+	if ok {
+		t.Error("no more result expected from channel")
 	}
 }
 

@@ -7,6 +7,9 @@ import (
 	"time"
 )
 
+// retrySleep proxy to function time.After and is overridden in testing to not depend on time
+var retrySleep = time.After
+
 // Command returns a retry which encapsulates name and arguments of the command to be executed with
 // the configuration policies for retries and context for cancellation.
 func Command(ctx context.Context, name string, arg []string, config Config) *retry {
