@@ -44,7 +44,7 @@ Options:
 - `--max 1`: maximum number of command execution.
 - `--sleep 2s`: sleep time between single execution.
 - `--timeout 15s`: limits the time duration of total retries.
-
+- `--concurrency 1`: maximum number of concurrent executions.
 
 Type `retry --help` for a complete description and default values.
 
