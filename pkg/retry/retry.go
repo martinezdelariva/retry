@@ -60,29 +60,28 @@ func (r *retry) Run() <-chan Result {
 		sem := make(chan struct{}, r.config.Concurrency)
 		defer close(sem)
 
+	loop:
 		for i := 0; i < r.config.Max; i++ {
+			// concurrency
+			select {
+			case sem <- struct{}{}: // fetch token
+			case <-r.cxt.Done():
+				once.Do(func() {
+					out <- Result{Command: nil, RealTime: 0, Err: r.cxt.Err()}
+				})
+				wg.Add(i - r.config.Max)
+				break loop
+			}
+
 			go func() {
 				defer func() {
 					wg.Done()
 				}()
 
-				// concurrency
-				select {
-				case sem <- struct{}{}: // get token
-				case <-r.cxt.Done():
-					once.Do(func() {
-						out <- Result{Command: nil, RealTime: 0, Err: r.cxt.Err()}
-					})
-					return
-				}
-
 				// sleep
 				select {
 				case <-sleep(r.config.Sleep):
 				case <-r.cxt.Done():
-					once.Do(func() {
-						out <- Result{Command: nil, RealTime: 0, Err: r.cxt.Err()}
-					})
 					return
 				}
 
