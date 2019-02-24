@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"testing"
 	"time"
 )
@@ -139,12 +140,6 @@ func TestCancelContext(t *testing.T) {
 		scenario    func(chan<- time.Time, <-chan Result)
 	}{
 		{
-			name:        "waiting and sleeping",
-			max:         2,
-			concurrency: 1,
-			scenario:    func(tick chan<- time.Time, rCh <-chan Result) {},
-		},
-		{
 			name:        "sleeping and executing",
 			max:         2,
 			concurrency: 1,
@@ -192,10 +187,13 @@ func TestCancelContext(t *testing.T) {
 			tc.scenario(tick, rCh)
 			cancel()
 
-			// cancelled context
-			r := <-rCh
-			if r.Err == nil {
-				t.Error("cancelled context: want err got nil")
+			// canceled context results
+			for i := 0; i < tc.concurrency; i++ {
+				r := <-rCh
+				if r.Err == nil {
+					t.Error("canceled context: want err got nil")
+				}
+
 			}
 
 			// closed channel
@@ -204,6 +202,20 @@ func TestCancelContext(t *testing.T) {
 				t.Error("no more result expected from channel")
 			}
 		})
+	}
+}
+
+func TestCancelContextWaitingAndSleeping(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	rty := Command(ctx, "sleep", []string{"10s"}, Config{Max: 2, Concurrency: 1})
+	rCh := rty.Run()
+
+	cancel()
+
+	r, ok := <-rCh
+	log.Println(r)
+	if ok {
+		t.Error("no more result expected from channel")
 	}
 }
 

@@ -38,7 +38,7 @@ type retry struct {
 
 // Run starts the executions of the same command and returns a channel where results are sent.
 // Each result contains *exec.Cmd already executed, total time.Duration of the execution and
-// any error returns from *exec.Cmd (Err are the ones returned by *exec.Cmd).
+// any error returns from *exec.Cmd (Err are the ones returned by *exec.Cmd) or by context.Err.
 // There is no guarantee that *exec.Cmd is not nil, due the command is only created just before
 // to be executed, and the retry could be waiting for concurrency or sleeping reasons.
 func (r *retry) Run() <-chan Result {
@@ -53,7 +53,6 @@ func (r *retry) Run() <-chan Result {
 			return
 		}
 
-		var once sync.Once
 		var wg sync.WaitGroup
 		wg.Add(r.config.Max)
 
@@ -66,9 +65,6 @@ func (r *retry) Run() <-chan Result {
 			select {
 			case sem <- struct{}{}: // fetch token
 			case <-r.cxt.Done():
-				once.Do(func() {
-					out <- Result{Command: nil, RealTime: 0, Err: r.cxt.Err()}
-				})
 				wg.Add(i - r.config.Max)
 				break loop
 			}
@@ -86,18 +82,10 @@ func (r *retry) Run() <-chan Result {
 				}
 
 				// exec
-				result := r.retry()
+				out <- r.retry()
 
 				// free token
 				<-sem
-
-				if r.cxt.Err() != nil {
-					once.Do(func() {
-						out <- result
-					})
-				} else {
-					out <- result
-				}
 			}()
 		}
 
