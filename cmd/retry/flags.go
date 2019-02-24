@@ -9,12 +9,13 @@ import (
 )
 
 type cmdFlags struct {
-	name    string
-	args    []string
-	max     int
-	timeout time.Duration
-	sleep   time.Duration
-	version bool
+	name        string
+	args        []string
+	max         int
+	timeout     time.Duration
+	sleep       time.Duration
+	concurrency int
+	version     bool
 }
 
 func flags() (cmdFlags, error) {
@@ -26,6 +27,7 @@ func flags() (cmdFlags, error) {
 	max := flag.Int("max", 1, "maximum number of retries")
 	timeout := flag.Duration("timeout", 24*time.Hour, "limits the time duration of total retries in 0h0m0s")
 	sleep := flag.Duration("sleep", 0, "sleep time between single execution in 0h0m0s")
+	concurrency := flag.Int("concurrency", 1, "maximum number of concurrent executions")
 	ver := flag.Bool("version", false, "show app version")
 
 	flag.Parse()
@@ -37,13 +39,17 @@ func flags() (cmdFlags, error) {
 	if len(flag.Args()) == 0 {
 		return cmdFlags{}, errors.New("missing command")
 	}
+	if *concurrency < 1 {
+		return cmdFlags{}, errors.New("minimum parallel execution is 1")
+	}
 
 	f := cmdFlags{
-		name:    flag.Args()[0],
-		args:    flag.Args()[1:],
-		max:     *max,
-		timeout: *timeout,
-		sleep:   *sleep,
+		name:        flag.Args()[0],
+		args:        flag.Args()[1:],
+		max:         *max,
+		timeout:     *timeout,
+		sleep:       *sleep,
+		concurrency: *concurrency,
 	}
 
 	return f, nil

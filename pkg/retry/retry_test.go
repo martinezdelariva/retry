@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"testing"
 	"time"
 )
@@ -15,7 +16,6 @@ type want struct {
 }
 
 func TestCommand(t *testing.T) {
-
 	tt := []struct {
 		name    string
 		cmdName string
@@ -27,7 +27,7 @@ func TestCommand(t *testing.T) {
 			name:    "one exec",
 			cmdName: "echo",
 			args:    []string{"foo"},
-			cfg:     Config{Max: 1},
+			cfg:     Config{Max: 1, Concurrency: 1},
 			want: []want{
 				{stdout: "foo\n"},
 			},
@@ -36,7 +36,7 @@ func TestCommand(t *testing.T) {
 			name:    "3 exec",
 			cmdName: "echo",
 			args:    []string{"foo"},
-			cfg:     Config{Max: 3},
+			cfg:     Config{Max: 3, Concurrency: 1},
 			want: []want{
 				{stdout: "foo\n"},
 				{stdout: "foo\n"},
@@ -47,7 +47,7 @@ func TestCommand(t *testing.T) {
 			name:    "write on stderr",
 			cmdName: "/bin/sh",
 			args:    []string{"-c", `>&2 echo "an error"`},
-			cfg:     Config{Max: 2},
+			cfg:     Config{Max: 2, Concurrency: 1},
 			want: []want{
 				{stderr: "an error\n"},
 				{stderr: "an error\n"},
@@ -56,7 +56,7 @@ func TestCommand(t *testing.T) {
 		{
 			name:    "command not found halt iterations",
 			cmdName: "unknown",
-			cfg:     Config{Max: 2},
+			cfg:     Config{Max: 2, Concurrency: 1},
 			want: []want{
 				{err: errors.New(`exec: "unknown": executable file not found in $PATH`)},
 			},
@@ -65,7 +65,7 @@ func TestCommand(t *testing.T) {
 			name:    "exit 1 continue exec",
 			cmdName: "/bin/sh",
 			args:    []string{"-c", `exit 1`},
-			cfg:     Config{Max: 2},
+			cfg:     Config{Max: 2, Concurrency: 1},
 			want: []want{
 				{err: errors.New("exit status 1")},
 				{err: errors.New("exit status 1")},
@@ -89,10 +89,10 @@ func TestCommand(t *testing.T) {
 
 			// same stdout, stderr and err
 			for i, want := range tc.want {
-				if want.stdout != fmt.Sprint(got[i].Command.Stdout) {
+				if got[i].Command != nil && want.stdout != fmt.Sprint(got[i].Command.Stdout) {
 					t.Errorf("stdout want: %q got:  %q", want.stdout, fmt.Sprint(got[i].Command.Stdout))
 				}
-				if want.stderr != fmt.Sprint(got[i].Command.Stderr) {
+				if got[i].Command != nil && want.stderr != fmt.Sprint(got[i].Command.Stderr) {
 					t.Errorf("stderr want: %q got:  %q", want.stderr, fmt.Sprint(got[i].Command.Stderr))
 				}
 				if fmt.Sprint(want.err) != fmt.Sprint(got[i].Err) {
@@ -104,25 +104,26 @@ func TestCommand(t *testing.T) {
 }
 
 func TestSleep(t *testing.T) {
-	// override retrySleep to not depend on time
-	sleep := make(chan time.Time)
-	retrySleep = func(d time.Duration) <-chan time.Time {
+	// override sleep to assert the number of seconds given
+	tick := make(chan time.Time)
+	sleep = func(d time.Duration) <-chan time.Time {
 		if d != 5*time.Second {
 			t.Errorf("sleep want %s got %s", 5*time.Second, d)
 		}
-		return sleep
+		return tick
 	}
 	defer func() {
-		retrySleep = time.After
+		sleep = time.After
 	}()
 
-	cfg := Config{Max: 2, Sleep: 5 * time.Second}
+	cfg := Config{Max: 2, Sleep: 5 * time.Second, Concurrency: 1}
 	rty := Command(context.Background(), "echo", []string{}, cfg)
 	rCh := rty.Run()
 
 	// consume 2 results and 1 sleep
+	tick <- time.Time{}
 	<-rCh
-	sleep <- time.Time{}
+	tick <- time.Time{}
 	<-rCh
 
 	_, ok := <-rCh
@@ -132,36 +133,137 @@ func TestSleep(t *testing.T) {
 }
 
 func TestCancelContext(t *testing.T) {
-	// override retrySleep to cancel execution before next retry
-	retrySleep = func(d time.Duration) <-chan time.Time {
-		return make(chan time.Time)
+	tt := []struct {
+		name        string
+		max         int
+		concurrency int
+		scenario    func(chan<- time.Time, <-chan Result)
+	}{
+		{
+			name:        "sleeping and executing",
+			max:         2,
+			concurrency: 1,
+			scenario: func(tick chan<- time.Time, rCh <-chan Result) {
+				tick <- time.Time{}
+			},
+		},
+		{
+			name:        "only executing",
+			max:         1,
+			concurrency: 1,
+			scenario: func(tick chan<- time.Time, rCh <-chan Result) {
+				tick <- time.Time{}
+			},
+		},
+		{
+			name:        "concurrent execution",
+			max:         2,
+			concurrency: 2,
+			scenario: func(tick chan<- time.Time, rCh <-chan Result) {
+				tick <- time.Time{}
+				tick <- time.Time{}
+			},
+		},
+		{
+			name:        "waiting and concurrent execution",
+			max:         3,
+			concurrency: 2,
+			scenario: func(tick chan<- time.Time, rCh <-chan Result) {
+				tick <- time.Time{}
+				tick <- time.Time{}
+			},
+		},
 	}
-	defer func() {
-		retrySleep = time.After
-	}()
 
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			tick, tearDown := tick()
+			defer tearDown()
+
+			ctx, cancel := context.WithCancel(context.Background())
+			rty := Command(ctx, "sleep", []string{"10s"}, Config{Max: tc.max, Concurrency: tc.concurrency})
+			rCh := rty.Run()
+
+			tc.scenario(tick, rCh)
+			cancel()
+
+			// canceled context results
+			for i := 0; i < tc.concurrency; i++ {
+				r := <-rCh
+				if r.Err == nil {
+					t.Error("canceled context: want err got nil")
+				}
+
+			}
+
+			// closed channel
+			_, ok := <-rCh
+			if ok {
+				t.Error("no more result expected from channel")
+			}
+		})
+	}
+}
+
+func TestCancelContextWaitingAndSleeping(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
-
-	rty := Command(ctx, "echo", []string{}, Config{Max: 4})
+	rty := Command(ctx, "sleep", []string{"10s"}, Config{Max: 2, Concurrency: 1})
 	rCh := rty.Run()
-
-	// 1st result
-	r := <-rCh
-	if r.Err != nil {
-		t.Error("not expected error")
-	}
 
 	cancel()
 
-	// 2nd result
-	r = <-rCh
-	if r.Err == nil {
-		t.Error("cancelled context: want err got nil")
+	r, ok := <-rCh
+	log.Println(r)
+	if ok {
+		t.Error("no more result expected from channel")
+	}
+}
+
+func TestConcurrency(t *testing.T) {
+	tick, tearDown := tick()
+	defer tearDown()
+
+	rty := Command(context.Background(), "echo", []string{}, Config{Max: 4, Concurrency: 2})
+	rCh := rty.Run()
+
+	// 1st and 2nd
+	tick <- time.Time{}
+	tick <- time.Time{}
+	<-rCh
+	<-rCh
+
+	// no more result expected
+	select {
+	case r := <-rCh:
+		t.Fatalf("not expected result, got %v", r)
+	default:
 	}
 
-	// finish retries
+	// 3rd and 4th
+	tick <- time.Time{}
+	tick <- time.Time{}
+	<-rCh
+	<-rCh
+
+	// end
 	_, ok := <-rCh
 	if ok {
 		t.Error("no more result expected from channel")
 	}
+}
+
+// tick overrides the original function retry.sleep and returning a channel and a tear down function.
+// The channel controls when to finishes sleeps on sending time.Time and the tear down function restore
+// the original one.
+func tick() (chan<- time.Time, func()) {
+	tick := make(chan time.Time)
+	sleep = func(d time.Duration) <-chan time.Time {
+		return tick
+	}
+
+	tearDown := func() {
+		sleep = time.After
+	}
+
+	return tick, tearDown
 }
