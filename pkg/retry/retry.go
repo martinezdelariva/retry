@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"os/exec"
-	"sync"
 	"time"
 )
 
@@ -53,27 +52,18 @@ func (r *retry) Run() <-chan Result {
 			return
 		}
 
-		var wg sync.WaitGroup
-		wg.Add(r.config.Max)
-
 		sem := make(chan struct{}, r.config.Concurrency)
 		defer close(sem)
-
 	loop:
 		for i := 0; i < r.config.Max; i++ {
 			// concurrency
 			select {
 			case sem <- struct{}{}: // fetch token
 			case <-r.cxt.Done():
-				wg.Add(i - r.config.Max)
 				break loop
 			}
 
 			go func() {
-				defer func() {
-					wg.Done()
-				}()
-
 				// sleep
 				select {
 				case <-sleep(r.config.Sleep):
@@ -89,7 +79,10 @@ func (r *retry) Run() <-chan Result {
 			}()
 		}
 
-		wg.Wait()
+		// wait
+		for i := 0; i < r.config.Concurrency; i++ {
+			sem <- struct{}{}
+		}
 	}()
 
 	return out
